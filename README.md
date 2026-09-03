@@ -30,7 +30,7 @@ See `/docs` for the complete specification documents:
 
 Project Sentinel is source-available and non-commercial, licensed under PolyForm Noncommercial 1.0.0. The full source code is public and may be read, audited, forked, and modified freely for personal, educational, research, or nonprofit use. No individual, company, or derivative project may generate revenue from this codebase, or any part of it, without a separate agreement with the project.
 
-This is deliberately **not** an OSI-approved open source license. See `LICENSING.md` (to be published at v1.0) for the full rationale behind this choice.
+This is deliberately **not** an OSI-approved open source license. See `LICENSING.md` and the project documentation (found inside the `docs` directory) for the full rationale behind this choice.
 
 See the `LICENSE` file for the exact license text.
 
