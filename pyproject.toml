@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project]
+name = "sentinel"
+version = "0.0.1"
+description = "Privacy Automation Platform"
+requires-python = ">=3.12"
+license = { file = "LICENSE.md" }
+
+[project.optional-dependencies]
+dev = ["ruff", "mypy", "pytest", "pytest-cov", "pre-commit",]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+# E, F = core pyflakes/pycodestyle errors
+# I = import sorting
+# UP = pyupgrade (modern syntax)
+# B = bugbear (common bug patterns)
+# SIM = simplify (readibility)
+
+[tool.mypy]
+python_version = "3.13"
+strict = true # given the project handles a crypto vault, this seems important
+warn_unused_ignores = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=src/sentinel --cov-report=term-missing"
