@@ -17,7 +17,7 @@ dev = ["ruff", "mypy", "pytest", "pytest-cov", "pre-commit",]
 
 [tool.ruff]
 line-length = 100
-target-version = "py313"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
@@ -28,7 +28,7 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 # SIM = simplify (readibility)
 
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.12"
 strict = true # given the project handles a crypto vault, this seems important
 warn_unused_ignores = true
 disallow_untyped_defs = true
