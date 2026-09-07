@@ -1,0 +1,37 @@
+%% ============================================================
+%%  main.tex — Technical Specification
+%%  Compile with: xelatex main.tex  (run twice for ToC + links)
+%% ============================================================
+\documentclass[11pt,openany]{report}
+
+\usepackage{../sentinel-style}   % the shared template; do not edit here
+\input{../project-config}        % project wide values
+\input{doc-config}               % this document's values
+
+\begin{document}
+
+\sentineltitlepage
+
+\tableofcontents
+
+% ------------------------------------------------------------
+% CHAPTERS
+% ------------------------------------------------------------
+\include{chapters/00-purpose-of-this-document.tex}
+\include{chapters/01-requirements-specification-and-geovernance-foundation}
+\include{chapters/02-system-architecture}
+\include{chapters/03-database-and-data-model-design}
+\include{chapters/04-repository-and-development-environment}
+\include{chapters/05-security-foundation}
+\include{chapters/06-core-application-framework}
+\include{chapters/07-identity-and-privacy-manager}
+\include{chapters/08-company-database-system}
+\include{chapters/09-request-generation-engine}
+\include{chapters/10-email-integration}
+\include{chapters/11-automation-framework}
+\include{chapters/12-plugin-system}
+\include{chapters/13-user-experience-refinement}
+\include{chapters/14-testing-and-service-review}
+\include{chapters/15-public-release}
+
+\end{document}

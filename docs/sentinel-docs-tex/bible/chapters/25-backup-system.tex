@@ -1,0 +1,22 @@
+%% ============================================================
+%%  chapter-template.tex
+%%  Copy this into bible/chapters/ or spec/chapters/ as a starting
+%%  point for a new chapter, then rename it and add its \include
+%%  line to that document's main.tex.
+%% ============================================================
+
+\chapter{Backup System}
+
+Encrypted backups are supported. Backups may contain:
+\begin{itemize}
+	\item settings
+	\item vault
+	\item hoístory
+\end{itemize}
+Backups should never expose unencrypted personal data.
+
+\section{Integrity Verification}
+Before any restore operation is performed, the backup file must be integrity-checked using a checksum and signature verification, confirming the file has not been corrupted or tampered with since it was created. A restore must be blocked, with a clear warning shown to the user, if integrity verification fails. This protects against both accidental corruption (e.g., an incomplete file copy) and malicious tampering (e.g., a modified backup file being reintroduced to the system).
+
+
+\sentinelchapterend

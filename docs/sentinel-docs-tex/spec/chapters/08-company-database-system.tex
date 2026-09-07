@@ -1,0 +1,24 @@
+\chapter{Company Database System}
+
+\section{Company Search}
+\textbf{Decision}: Company search (Section 13) is implemented using SQLite FTS5 full-text search over company names, domains, and known aliases, indexed against the local SQLite cache (Section 3.3).
+
+\textbf{Rationale}: FTS5 is built directly into SQLite, so it adds no new dependency beyond the database engine already chosen for the local company cache. It provides relevance ranking and prefix/typo-tolerant matching, meaningfully improving results when a user searches with a partial or slightly misspelled company name, and its indexes can be rebuilt alongside the existing YAML-to-SQLite import step. This was chosen over simple LIKE/substring queries, which offer no relevance ranking and degrade in performance as the company database grows, since substring matches cannot use a standard index.
+\section{Company Categorization}
+\textbf{Decision}: Companies are categorized using a fixed taxonomy of categories (e.g. data broker, people-search, advertiser, retailer) defined directly in the YAML schema for company records.
+
+\textbf{Rationale}: A fixed taxonomy keeps categorization consistent and machine-usable across the entire global database, supporting bulk actions grouped by category (Section 12, e.g. "remove me from all known people-search websites") and predictable filtering/search. Free-form, community-defined tags would fragment over time into near-duplicate or inconsistent labels (e.g. "data broker" vs "data-broker" vs "broker"), undermining the reliability of category-based bulk actions.
+\section{Global Company Database Sync Timing}
+\textbf{Decision}: The global company database sync runs automatically on every application launch, alongside the software/database update check described in Section 26, and is also available as a manual "sync now" action at any time.
+
+\textbf{Rationale}: Launch-time syncing keeps the local company cache reasonably current without requiring the user to think about it, consistent with the update-check timing already established in Section 6.3. A manual sync option is added on top for cases where a user wants the latest data immediately, for instance, right after submitting or hearing about a correction, without needing to restart the application.
+\section{Company Submission Interface}
+\textbf{Decision}: The in-app company submission interface produces a signed submission sent directly to the custom backend defined in Section 3.4, which validates it and opens the corresponding pull request or commit against the company database repository on the user's behalf. Users are not required to have a GitHub account, use git, or interact with the repository directly.
+
+\textbf{Rationale}: This directly implements the behavior already described in Section 14, "the software converts submissions into the correct database format", as an automatic, in-app step rather than leaving the user to manually construct and submit a patch file via GitHub. Removing the need for git or GitHub literacy meaningfully lowers the barrier to contribution for the non-developer community members Section 14 is written for, which matters directly for the community-maintenance priority (Section 2.3). The tradeoff is that the backend must securely hold or be granted a credential capable of opening pull requests/commits, which is an accepted extension of the trust already placed in that backend component for validation, voting, and flagging (Section 3.4).
+\section{Local Edit Conflict Handling}
+\textbf{Decision}: If a global sync updates a company record for which the user has a pending, unsynced local edit or submission, the two versions are never silently merged. The local edit is held separately, and the user is shown both versions to resolve manually.
+
+\textbf{Rationale}: Silently overwriting a user's pending local correction with an incoming global update could discard work the user has not yet submitted, and silently keeping the stale local version instead of the updated global record risks the user acting on outdated company information. Surfacing both versions for manual resolution keeps the user in control of which version is correct, consistent with the user-controlled-automation philosophy (Section 2.2), and avoids the application making a judgment call about which of two conflicting records is accurate.
+
+\sentinelchapterend

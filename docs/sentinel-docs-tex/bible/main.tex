@@ -1,0 +1,56 @@
+%% ============================================================
+%%  main.tex — Project Bible
+%%  Compile with: xelatex main.tex  (run twice for ToC + links)
+%% ============================================================
+\documentclass[11pt,openany]{report}
+
+
+\usepackage{../sentinel-style}   % the shared template — do not edit here
+\input{../project-config}        % project-wide values
+\input{doc-config}               % this document's values
+
+\begin{document}
+
+\sentineltitlepage
+
+\tableofcontents
+
+% ------------------------------------------------------------
+% Chapters. Add/remove \include lines as the document grows.
+% Each chapter is its own file in chapters/ — see chapters/00-template.tex
+% for a starting point when adding a new one.
+% ------------------------------------------------------------
+\include{chapters/01-overview.tex}
+\include{chapters/02-core-philosophy.tex}
+\include{chapters/03-privacy-principles.tex}
+\include{chapters/04-supported-platforms.tex}
+\include{chapters/05-installation.tex}
+\include{chapters/06-user-authentication-and-encryption.tex}
+\include{chapters/07-identity-management.tex}
+\include{chapters/08-privacy-rules.tex}
+\include{chapters/09-legal-framework-support.tex}
+\include{chapters/10-privacy-request-types.tex}
+\include{chapters/11-request-workflow.tex}
+\include{chapters/12-bulk-actions.tex}
+\include{chapters/13-company-database.tex}
+\include{chapters/14-community-database-system.tex}
+\include{chapters/15-local-and-global-database.tex}
+\include{chapters/16-email-integration.tex}
+\include{chapters/17-browser-automation.tex}
+\include{chapters/18-queue-system.tex}
+\include{chapters/19-privacy-score.tex}
+\include{chapters/20-document-protection.tex}
+\include{chapters/21-plugins.tex}
+\include{chapters/22-ai-policy.tex}
+\include{chapters/23-logging.tex}
+\include{chapters/24-notifications.tex}
+\include{chapters/25-backup-system.tex}
+\include{chapters/26-updates.tex}
+\include{chapters/27-interface.tex}
+\include{chapters/28-security-philosophy.tex}
+\include{chapters/29-threat-model.tex}
+\include{chapters/30-licensing.tex}
+\include{chapters/31-project-identity.tex}
+\include{chapters/32-development-roadmap.tex}
+
+\end{document}

@@ -1,0 +1,40 @@
+\chapter{Request Workflow}
+
+Requests follow a clear lifecycle:
+
+\begin{center}
+	\begin{tikzpicture}[
+	    box/.style={
+	        draw,
+	        rounded corners,
+	        minimum width=4cm,
+	        minimum height=0.9cm,
+	        align=center
+	    },
+	    >={Stealth}
+	]
+	
+	\node[box] (draft) at (0,0) {Draft Composed};
+	\node[box] (review) at (0,-1.5) {Posted For Review};
+	\node[box] (approval) at (0,-3.0) {User Approval};
+	\node[box] (sent) at (0,-4.5) {Request Sent};
+	\node[box] (waiting) at (0,-6.0) {Waiting For Company Response};
+	\node[box] (received) at (0,-7.5) {Response Received};
+	\node[box] (action) at (0,-9.0) {User Action Required};
+	\node[box] (completed) at (0,-10.5) {Completed};
+		
+	
+	\draw[->, thick] (draft) -- (review);
+	\draw[->, thick] (review) -- (approval);
+	\draw[->, thick] (approval) -- (sent);
+	\draw[->, thick] (sent) -- (waiting);
+	\draw[->, thick] (waiting) -- (received);
+	\draw[->, thick] (received) -- (action);
+	\draw[->, thick] (action) -- (completed);
+	
+	\end{tikzpicture}
+\end{center}
+
+The system never performs sensitive actions without user approval.
+
+\sentinelchapterend

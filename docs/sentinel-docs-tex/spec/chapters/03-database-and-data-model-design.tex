@@ -1,0 +1,36 @@
+\chapter{Database and Data Model Design}
+
+\section{Vault Storage Engine}
+\textbf{Decision}:  The encrypted vault is implemented using SQLCipher (SQLite with transparent full-database encryption).
+
+\textbf{Rationale}:  SQLCipher provides transparent, audited full-database encryption at the SQLite layer, avoiding the need to hand-roll per-field encryption logic while still giving relational structure, indexing, and query performance for vault contents (identities, request history, rules, plugin metadata; see Section 6). This was chosen over a single encrypted blob decrypted fully into memory on unlock, which would be simpler but scales poorly as vault contents grow and forces the entire vault to be re-serialized and re-encrypted on every save rather than allowing targeted writes.
+\section{Task Queue Storage}
+\textbf{Decision}:  The background task queue (Section 18) is stored in its own separate, unencrypted local SQLite file, distinct from the vault.
+
+\textbf{Rationale}:  Queue contents (task states, retry counts, scheduling metadata) contain no personal information and are written far more frequently than vault data. Keeping the queue outside the vault avoids unnecessary encryption overhead on high-frequency writes and keeps the vault's write pattern focused on genuinely sensitive data.
+\section{Global Company Database Format}
+\textbf{Decision}:  The canonical global company database is stored as individual YAML files, one per company, each carrying an explicit version number field. This YAML source is imported into a local SQLite cache for runtime queries within the application.
+
+\textbf{Rationale}:  Individual per-company YAML files make Section 14's community review process practical: a single submission is a single small, human-readable diff against one file, which both human moderators and automated verification checks (Section 14.1) can evaluate in isolation. An explicit version field lets the client's sync logic detect staleness with a simple integer comparison, complementing (not replacing) the change history already provided by git. SQLite-on-import exists purely as a fast, disposable local query cache. The YAML files remain the source of truth; the imported database is rebuilt from them on each sync, not edited directly.
+\section{Global Company Database Synchronization}
+\textbf{Decision}:  A public git repository holds the canonical set of company YAML files and serves as the review surface. A lightweight custom backend sits on top of it to handle submission validation, reputation-weighted voting, the 70\% moderator-approval threshold, and post-approval flagging/auto-suspend (Section 14). That backend signs and publishes versioned release bundles (an archive of the currently approved YAML set plus an Ed25519 signature, per Section 26), which is what installed clients fetch and verify. End users never need git installed.
+
+\textbf{Rationale}:  Git provides free hosting, built-in diff/history/blame, and a natural pull-request-style review flow at no infrastructure cost, directly supporting the transparency goal in Section 31. However, git alone has no concept of reputation-weighted voting, moderator thresholds, or automatic suspension of a previously-approved-but-later-flagged record, all of which Section 14 requires; a custom backend is necessary regardless of hosting choice to implement that logic. Combining the two avoids reinventing hosting and version history while still delivering the community-governance workflow the specification describes. A fully custom sync server without git was ruled out as it would require rebuilding free infrastructure git already provides.
+\section{Local Company Database}
+\textbf{Decision}:  The user's local, not-yet-globally-approved company records (Section 15) are stored in the same unencrypted local SQLite file as the imported global company cache and task queue.
+
+\textbf{Rationale}:  Local company records are, by the same reasoning as the global cache, not personal data as they describe companies, not the user, so no encryption benefit is lost by co-locating them. Keeping global and local company data in one file simplifies queries that need to consider both together (e.g. company search across global and local records, Section 13).
+\section{Vault Internal Schema}
+\textbf{Decision}:  Identity profiles, request history, and rules are structured as normalized relational tables inside the SQLCipher vault (e.g. separate linked tables for profiles, identities, addresses, requests, and rules), rather than as flexible JSON documents.
+
+\textbf{Rationale}:  Normalized tables give clean referential integrity for relationships the application depends on functionally, not just descriptively, for example, which identity profile was used for a given request (Section 11's lifecycle), or which rules applied to a given bulk action (Section 12). This also makes future querying, reporting, and privacy-score calculation (Section 19) more straightforward than parsing JSON blobs at query time.
+\section{Plugin Metadata Storage}
+\textbf{Decision}:  Plugin metadata, installed plugins and their granted permissions, is stored inside the encrypted vault, alongside identity and request data.
+
+\textbf{Rationale}:  A plugin's granted permission set reveals what personal data categories it can access, which is itself sensitive information about the user's configuration and risk exposure. Storing it inside the vault keeps that information under the same access control as the data it describes, consistent with the default-no-access plugin permission model (Section 21).
+\section{Request History Retention}
+\textbf{Decision}:  Request history is retained indefinitely inside the vault by default. Users may manually prune history; no automatic retention/deletion policy is applied.
+
+\textbf{Rationale}:  Request history is part of the user's own record of their privacy-rights exercises and has ongoing value (tracking deadlines, referencing past correspondence, auditing which companies have been contacted, see Sections 11 and 16). Since this data lives only inside the user's own encrypted, locally-controlled vault (Section 2.1's no-central-database principle), there is no external storage-cost or exposure pressure to auto-delete it; retention control is left entirely to the user, consistent with the project's user-controlled-automation philosophy (Section 2.2).
+
+\sentinelchapterend

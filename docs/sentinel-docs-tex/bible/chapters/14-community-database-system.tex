@@ -1,0 +1,36 @@
+%% ============================================================
+%%  chapter-template.tex
+%%  Copy this into bible/chapters/ or spec/chapters/ as a starting
+%%  point for a new chapter, then rename it and add its \include
+%%  line to that document's main.tex.
+%% ============================================================
+
+\chapter{Community Database System}
+
+The global company database is community maintained.
+Users can submit additions and corrections directly through the software.
+The software converts submissions into the correct database format.
+
+\section{Review Process}
+User submits information.
+Software validates the submission.
+Community votes.
+Reputation influences community voting.
+High-status changes require moderator approval.
+At least 70% of moderators must approve.
+Moderator votes are independent of reputation.
+
+\section{Submission Verification}
+Because company records can redirect real personal data (e.g., a privacy contact email), every submission — not only high-status changes — must pass at least one independent verification step before being usable, regardless of vote count or submitter reputation. Examples of independent verification include:
+\begin{itemize}
+	\item confirming a submitted privacy contact address belongs to the same domain as the company's official website
+	\item cross-checking a submitted request method against publicly published company privacy policy pages flagging submissions where contact details do not match previously known-good records for the same company.
+\end{itemize}
+
+Submissions that fail automated verification are held for manual moderator review before becoming usable, regardless of community vote outcome.
+
+\section{Post-Approval Flagging}
+Approval is not the end of a record's scrutiny. Any user can flag a live, already-approved company record as suspicious (e.g., a changed privacy contact, a request that behaved unexpectedly, a mismatch with the company's official site). Records that accumulate enough flags are automatically suspended from active use pending moderator review, regardless of their prior approval status or reputation-weighted vote history. This ensures that a record which was legitimate at approval time but is later compromised, or that passed review due to coordinated abuse, can still be caught and pulled out of circulation quickly.
+
+
+\sentinelchapterend

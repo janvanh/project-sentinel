@@ -1,0 +1,25 @@
+\chapter{User Experience Refinement}
+
+\section{Accessibility Target}
+\textbf{Decision}: No formal accessibility target (e.g. WCAG-equivalent compliance) is set for v1.0. Accessibility is explicitly identified as an item to revisit in a future release.
+
+\textbf{Rationale}: Given the project's phase-based, security-first development priorities (Section 32's Guiding Principle: correctness, security, and privacy before convenience or speed), setting a formal accessibility target for v1.0 would add scope to an already extensive roadmap. Deferring rather than omitting keeps accessibility as an acknowledged, planned improvement rather than an unaddressed gap, consistent with the project's transparency principle (Section 31).
+\section{First-Launch Onboarding}
+\textbf{Decision}: For v1.0, first-launch guidance is provided through documentation and the README only. A guided in-app onboarding flow (vault creation walkthrough, first identity profile, key privacy settings) is planned as part of the finished product but is explicitly deferred to a later release.
+
+\textbf{Rationale}: This mirrors the accessibility decision above: onboarding is treated as a genuine part of the intended final product rather than an afterthought, but is deferred so that v1.0's scope stays focused on the security and functional foundation established in earlier phases. Documentation-based guidance is sufficient to get a user started safely in the interim, particularly given the vault-creation and password requirements (Section 6) are already enforced programmatically regardless of whether guided onboarding exists.
+\section{Documentation Maintenance and Publishing}
+\textbf{Decision}: User-facing documentation is maintained as versioned Markdown files within the code repository (Section 4.1) and published as a static site via GitHub Pages, rather than as a separately maintained wiki.
+
+\textbf{Rationale}: Keeping documentation in-repo means a pull request that changes application behavior can update the relevant documentation in the same commit, keeping docs from silently drifting out of sync with the software's actual current behavior. A real risk with a wiki, which lives outside the versioned repo history and outside the review process already established in Phase 4 (Section 4.10). Publishing via GitHub Pages requires no additional hosting infrastructure, consistent with the reasoning already applied to repository hosting (Section 4.3) and CI (Section 4.7), and versioning documentation alongside releases ensures a user reading a given version's docs is reading docs that describe that version.
+\section{Search Scope}
+\textbf{Decision}: Search remains independently scoped per section (Companies, Requests, Identity Profiles, etc.), rather than being unified into a single cross-section search entry point.
+
+\textbf{Rationale}: Each section's search serves a distinct purpose against distinct underlying data (e.g. company search against the company database, Section 8.1, versus searching one's own request history), and per-section search keeps each implementation focused and simple rather than needing a shared abstraction that ranks meaningfully different content types against each other.
+\section{Error Handling and Bug Reporting}
+\textbf{Decision}: A dedicated in-app error reporting flow shows errors to the user with a clear message and an optional "copy diagnostic info" action, sourced from the default, non-personal log stream (Section 5.4), which the user can attach when filing a GitHub issue using the bug report template (Section 4.10).
+
+\textbf{Rationale}: Surfacing diagnostic information sourced only from the non-personal log stream lets a user provide genuinely useful debugging context without needing to manually locate log files or risk pasting personal information (from the separately-gated personal log, Section 5.4) into a public issue tracker by mistake. Connecting this directly to the existing bug report template (Section 4.10) keeps error reporting consistent with the structured contribution workflow already established rather than introducing a separate, ad hoc reporting path.
+
+
+\sentinelchapterend

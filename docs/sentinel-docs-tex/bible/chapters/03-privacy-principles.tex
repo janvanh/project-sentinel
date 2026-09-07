@@ -1,0 +1,34 @@
+%% ============================================================
+%%  chapter-template.tex
+%%  Copy this into bible/chapters/ or spec/chapters/ as a starting
+%%  point for a new chapter, then rename it and add its \include
+%%  line to that document's main.tex.
+%% ============================================================
+
+\chapter{Privacy Principles}
+
+\section{Data Minimization}
+The system must always send the minimum amount of information required.
+
+Example:
+
+If a company only requires an email address, the software should not send:
+\begin{itemize}
+	\item phone number
+	\item address
+	\item date of birth
+	\item government identification
+\end{itemize}
+
+\section{No Central User Database}
+The project must never maintain a database containing:
+\begin{itemize}
+	\item user identities
+	\item personal information
+	\item request histories
+	\item private documents
+\end{itemize}
+
+All sensitive information belongs to the user.
+
+\sentinelchapterend

@@ -1,0 +1,44 @@
+\chapter{Repository and Development Environment}
+
+\section{Repository Structure}
+\textbf{Decision}:  A single monorepo holds the core application, GUI, and plugin SDK/examples. The company database (Section 3.4) remains its own separate repository.
+
+\textbf{Rationale}:  Application code, GUI code, and the plugin SDK are tightly coupled and typically change together, so a monorepo avoids cross-repo version-pinning overhead during development. The company database repository is kept separate because it has a fundamentally different contribution model, non-developer community members submitting company records (Section 14), and a different release cadence, and separating it keeps that review process from being entangled with application code review.
+\section{Branching Strategy}
+\textbf{Decision}:  Git-flow: a develop branch for ongoing integration, a main branch advanced only via tagged, signed releases, and short-lived release/feature branches as needed.
+
+\textbf{Rationale}:  Restricting main to tagged releases gives a clean, auditable point to hook the signed-release and update-distribution pipeline defined in Phase 2 (Section 2.8). Anything on main is, by construction, something that has gone through release signing. develop gives community contributions a stable integration branch without every merge triggering a user-facing release.
+\section{Repository Hosting}
+\textbf{Decision}:  GitHub.
+
+\textbf{Rationale}:  GitHub provides free hosting for public repositories, native issue/PR tooling that the community contribution and moderation workflows (Section 14) can build on, and integrates directly with the CI and dependency-scanning tooling chosen below, avoiding the need to run or secure separate infrastructure.
+\section{Code Formatting and Linting}
+\textbf{Decision}:  Ruff, used for both formatting and linting.
+
+\textbf{Rationale}:  Ruff combines what would otherwise be several separate tools (Black-equivalent formatting, Flake8-equivalent linting, import sorting) into one fast, single-config tool. For a project aiming for broad community contribution (Section 14, 28), a single fast tool with one configuration file lowers the barrier to entry for outside contributors compared to maintaining Black and Flake8 (plus plugins) separately.
+\section{Static Type Checking}
+\textbf{Decision}:  mypy.
+
+\textbf{Rationale}:  mypy is the most widely adopted type checker in the Python open-source ecosystem, with mature support for gradually typing an incrementally-built codebase and broad contributor familiarity. Pyright (which powers VS Code's Pylance) is a reasonable alternative and can be reconsidered if mypy's performance becomes a bottleneck, but mypy's ecosystem maturity makes it the safer default for a community project.
+\section{Testing Framework}
+\textbf{Decision}:  pytest.
+
+\textbf{Rationale}:  pytest's fixture system maps well onto this project's testing needs, a reusable temporary encrypted vault, a mock plugin subprocess, a fake company database, and its parametrized-test support suits testing rules or templates against many company records at once (Sections 8, 9). It is also the de facto standard, maximizing contributor familiarity, at a trivial dependency cost over the standard library's unittest.
+\section{Continuous Integration}
+\textbf{Decision}:  GitHub Actions, running formatting/lint checks (Ruff), type checks (mypy), the pytest suite, and dependency vulnerability scanning (Section 4.9) on every pull request, with matrix builds across Windows, Linux, and macOS.
+
+\textbf{Rationale}:  Given the repository is hosted on GitHub, GitHub Actions requires no separate infrastructure to run or secure, offers free CI minutes for public repositories, and integrates directly with PR status checks, letting the project require these checks pass before merge, and matrix-testing across all three target platforms (Section 4) in one workflow.
+\section{Pre-Commit Hooks}
+\textbf{Decision}:  Pre-commit hooks run Ruff and mypy locally before every commit.
+
+\textbf{Rationale}:  Catching formatting, lint, and type issues before a commit is even made gives contributors faster feedback than waiting on CI, and reduces the number of "fix lint" commits cluttering PR history, keeping the git history clean and reviewable, which supports the transparency goal in Section 31.
+\section{Dependency Vulnerability Scanning}
+\textbf{Decision}:  GitHub Dependabot provides passive, ongoing monitoring and automated PRs for vulnerable dependencies; pip-audit runs as an active CI check on every pull request, blocking merges that introduce a dependency with a known vulnerability.
+
+\textbf{Rationale}:  The project's threat model (Section 29) explicitly names compromised or malicious update pushes and supply-chain risk as threats it must protect against; a vulnerable dependency is a direct instance of that risk, especially given the application handles cryptography, an encrypted vault, and third-party plugin code. Dependabot alone only notifies; pairing it with a pip-audit CI gate ensures a known-vulnerable dependency cannot be merged silently, treating this as a required control rather than an optional one.
+\section{Issue and Pull Request Templates}
+\textbf{Decision}:  Structured GitHub issue templates for bug reports, feature requests, and company-database corrections, plus a pull request template with a contribution checklist.
+
+\textbf{Rationale}:  A dedicated company-database-correction template does much of Section 14.1's independent-verification legwork up front, by requiring structured evidence (e.g. company name, source link, what is changing) at submission time rather than leaving moderators to extract that information from free-form reports. This matters for scaling community review as contribution volume grows. A PR checklist reinforces the formatting/type/test expectations already enforced by CI and pre-commit hooks, making expectations explicit for first-time contributors.
+
+\sentinelchapterend

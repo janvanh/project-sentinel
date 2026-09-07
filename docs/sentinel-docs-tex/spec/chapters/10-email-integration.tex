@@ -1,0 +1,28 @@
+\chapter{Email Integration}
+
+\section{Provider Authentication}
+\textbf{Decision}: The application authenticates to Gmail and Outlook using OAuth2, their natively supported modern authentication method. Generic IMAP/SMTP providers are authenticated using app-specific passwords as the fallback method.
+
+\textbf{Rationale}: OAuth2 is the standard, more secure authentication path for Gmail and Outlook, avoids the application ever handling the user's actual account password, and is the method these providers most fully support and expect going forward. App-specific passwords remain necessary as a fallback because generic IMAP/SMTP providers (Section 16) do not uniformly support OAuth2, and requiring a single authentication method across all providers would exclude legitimate providers the specification explicitly lists as supported.
+\section{Proton Mail Integration}
+\textbf{Decision}: Proton Mail support requires Proton Mail Bridge, Proton's official local application that exposes standard IMAP/SMTP access to Proton Mail accounts.
+
+\textbf{Rationale}: Proton Mail does not expose standard IMAP/SMTP access directly, by design, as part of its own security model. Proton Mail Bridge is Proton's own officially supported solution for local IMAP/SMTP access, making it the natural integration path rather than reverse-engineering or depending on an unofficial API integration, which would be fragile and outside Proton's supported surface.
+\section{Verification and Deadline Detection}
+\textbf{Decision}: Detection of verification requests and parsing of response deadlines from incoming email is implemented using rule-based keyword and pattern matching, configurable and extensible via company records (Section 13).
+
+\textbf{Rationale}: Rule-based matching is deterministic and auditable. A user or moderator can inspect exactly which patterns triggered a given detection, which matters for a security-focused tool acting on the user's behalf (Section 31). Making these patterns extensible via company records lets company-specific response phrasing be captured as part of the same community-reviewed data already used for other company information (Section 14), rather than requiring an application code change for every company's particular wording. A local AI-assisted classifier remains permitted under the project's AI policy (see Section 22: optional, local-only, permission-controlled) and could be considered as a future enhancement, but is not required for this functionality to work correctly.
+\section{IMAP/SMTP Protocol Handling}
+\textbf{Decision}: The underlying IMAP and SMTP protocol work is handled directly using Python's standard library (imaplib and smtplib), rather than a higher-level third-party wrapper library.
+
+\textbf{Rationale}: Using the standard library avoids adding a third-party dependency for core email connectivity, functionality the application depends on for one of its primary purposes, keeping the dependency surface smaller and easier to audit, consistent with the project's general preference for minimizing dependencies (Section 18) and its security-conscious posture (Section 28, 31).
+\section{Conversation Threading}
+\textbf{Decision}: Email conversation threading is tracked primarily using standard Message-ID, References, and In-Reply-To headers. Custom heuristics based on subject line and sender matching are used as a fallback when these headers are missing or broken.
+
+\textbf{Rationale}: Standard threading headers are the most reliable and widely supported mechanism for associating replies with their original message, and using them as the primary method avoids reinventing a solved problem. The heuristic fallback exists because not every company's mail system reliably preserves these headers in practice, and without a fallback, a broken-header reply would otherwise appear as an orphaned message disconnected from its request history (Section 16), undermining the request lifecycle tracking described in Section 11.
+\section{Bounce Detection}
+\textbf{Decision}: Bounce detection is implemented by parsing standard bounce/Delivery Status Notification (DSN) messages per RFC 3464.
+
+\textbf{Rationale}: RFC 3464 defines a standardized, structured format for delivery failure notifications, which allows bounce detection to be based on parsing an actual, well-defined message structure rather than a heuristic guess. A simpler heuristic based on sender address patterns (e.g. anything resembling mailer-daemon) is less reliable, since bounce sender addresses vary across mail systems and such a heuristic could both miss genuine bounces and misclassify legitimate replies.
+
+\sentinelchapterend

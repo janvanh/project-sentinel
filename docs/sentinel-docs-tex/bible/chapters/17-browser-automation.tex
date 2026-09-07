@@ -1,0 +1,32 @@
+%% ============================================================
+%%  chapter-template.tex
+%%  Copy this into bible/chapters/ or spec/chapters/ as a starting
+%%  point for a new chapter, then rename it and add its \include
+%%  line to that document's main.tex.
+%% ============================================================
+
+\chapter{Browser Automation}
+
+Automation should be flexible.
+
+Supported approaches:
+
+\begin{itemize}
+	\item Full Automation	
+	\begin{itemize}
+		\item For simple predictable systems.
+	\end{itemize}
+	\item Assisted Automation
+	\begin{itemize}
+		\item The software fills forms while the user completes required steps.
+	\end{itemize}
+	\item Manual Assistance
+	\begin{itemize}
+		\item For complicated websites.
+		\item The system must never bypass security protections such as CAPTCHA.
+	\end{itemize}
+\end{itemize}
+
+The system must always respect a target site's Terms of Service and robots.txt directives. Automation is limited to legitimate, user-authorized interactions with a company's own privacy-request channels; it must never be used in a way that resembles unauthorized scraping, credential stuffing, or circumvention of access controls. This boundary protects both the user and the project's legal standing, and is core to the project's positioning as a serious, trustworthy security application (Section 31).
+
+\sentinelchapterend

@@ -1,0 +1,47 @@
+%% ============================================================
+%%  chapter-template.tex
+%%  Copy this into bible/chapters/ or spec/chapters/ as a starting
+%%  point for a new chapter, then rename it and add its \include
+%%  line to that document's main.tex.
+%% ============================================================
+
+\chapter{Chapter Title Here}
+
+\section{First Section}
+
+Body text goes here. Standard LaTeX — paragraphs, \emph{emphasis},
+\textbf{bold}, footnotes\footnote{Like this.}, etc. all work normally.
+
+\subsection{A Subsection}
+
+Use \texttt{itemize} for bullet lists:
+
+\begin{itemize}
+  \item First point
+  \item Second point
+\end{itemize}
+
+Use a note box to call out a definition, rule, or warning without
+it competing visually with the body text:
+
+\begin{sentinelnote}[Label Here]
+Callout content goes here — a decision, a rationale, a rule.
+\end{sentinelnote}
+
+Use a table where useful:
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{@{}ll@{}}
+    \toprule
+    \textbf{Column A} & \textbf{Column B} \\
+    \midrule
+    Value & Value \\
+    \bottomrule
+  \end{tabular}
+  \caption{Table caption}
+\end{table}
+
+% Always end every chapter file with this — it renders the closing
+% ornament and keeps a clean seam before the next \include'd chapter.
+\sentinelchapterend

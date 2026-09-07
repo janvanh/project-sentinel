@@ -1,0 +1,25 @@
+%% ============================================================
+%%  chapter-template.tex
+%%  Copy this into bible/chapters/ or spec/chapters/ as a starting
+%%  point for a new chapter, then rename it and add its \include
+%%  line to that document's main.tex.
+%% ============================================================
+
+\chapter{Updates}
+
+Updates require prior user approval.
+
+There are several security requirements for the update system:
+
+\begin{itemize}
+	\item signed releases
+	\item verified developers
+	\item reproducible builds where possible
+\end{itemize}
+
+Everytime the software is launched, it checks for database and software updates, and prompts the user for their approval to install possible updates.
+
+The community company database sync channel is held to the same signature verification standard as software updates. Every database update package must be signed by a verified source and cryptographically verified by the client before being applied. This closes the supply-chain gap that would otherwise exist if only software binaries were verified while a malicious or compromised database push could be applied unchecked (see Section 29, Threat Model).
+
+
+\sentinelchapterend

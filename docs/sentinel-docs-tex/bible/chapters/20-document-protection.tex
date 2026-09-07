@@ -1,0 +1,26 @@
+%% ============================================================
+%%  chapter-template.tex
+%%  Copy this into bible/chapters/ or spec/chapters/ as a starting
+%%  point for a new chapter, then rename it and add its \include
+%%  line to that document's main.tex.
+%% ============================================================
+
+\chapter{Document Protection}
+
+Before transmitting documents, the software should:
+\begin{itemize}
+	\item remove metadata
+	\item remove EXIF information
+	\item remove hidden properties
+	\item remove unnecessary content
+\end{itemize}
+
+Supported features:
+
+\begin{itemize}
+	\item redaction
+	\item cropping
+	\item watermarking
+\end{itemize}
+
+\sentinelchapterend

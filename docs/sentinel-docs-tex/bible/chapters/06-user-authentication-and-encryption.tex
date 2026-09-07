@@ -1,0 +1,117 @@
+%% ============================================================
+%%  chapter-template.tex
+%%  Copy this into bible/chapters/ or spec/chapters/ as a starting
+%%  point for a new chapter, then rename it and add its \include
+%%  line to that document's main.tex.
+%% ============================================================
+
+\chapter{User Authentication and Encryption}
+
+\section{Local Authentication}
+The initial version uses local authentication.
+No online login system exists.
+A system for future web hosted systems would need other forms of login methods to ensure maximum security, this will need to be developed if the project moves in the web-hosted direction. Please note that the web-version would only ever be an alternative, the local offline program will always stay the default.
+
+\section{Password Requirements}
+
+Passwords must:
+\begin{itemize}
+	\item contain at least 12 characters
+	\item contain at least one number
+	\item contain at least one special chacracter
+\end{itemize}
+
+Weak passwords should be rejected including:
+\begin{itemize}
+	\item common words
+	\item predictable substitutions
+	\item simple leetspeak modifications
+\end{itemize}
+
+
+\section{Encryption Model}
+The sotware uses one encrypted vault. THe vault contains:
+\begin{itemize}
+	\item identities
+	\item emails
+	\item phone numbers
+	\item addresses
+	\item documents
+	\item request history
+	\item templates
+	\item rules
+	\item company preferances
+\end{itemize}
+
+The password is never stored directly:
+
+\break
+\begin{center}
+	\begin{tikzpicture}[
+	    box/.style={
+	        draw,
+	        rounded corners,
+	        minimum width=4cm,
+	        minimum height=0.9cm,
+	        align=center
+	    },
+	    >={Stealth}
+	]
+	
+	\node[box] (password) at (0,0) {Password};
+	\node[box] (kdf) at (0,-1.5) {Secure Key Derivation};
+	\node[box] (key) at (0,-3.0) {Encryption Key};
+	\node[box] (vault) at (0,-4.5) {Encrypted Vault};
+	
+	\draw[->, thick] (password) -- (kdf);
+	\draw[->, thick] (kdf) -- (key);
+	\draw[->, thick] (key) -- (vault);
+	
+	\end{tikzpicture}
+\end{center}
+
+
+
+\section{Recovery}
+The vault uses a key-slot architecture, sometimes called "multi-key encryption" (the same underlying concept used by LUKS full-disk encryption and by emergency-access features in password managers such as Bitwarden). This section explains the mechanism in full, since it is the foundation of the project's security and recovery guarantees.
+
+The Core Idea: Separating "What Encrypts the Data" from "What Unlocks the Vault"
+A common mistake in vault design is to derive the encryption key directly from the user's password. If that were the case here, adding a second unlock method (like a recovery key) would require re-encrypting the entire vault with a new key every time. This slow, risky, and hard to do safely for large vaults.
+Instead, this project uses a two-layer model:
+
+\subsection{Layer 1 — The Data Encryption Key (DEK)}
+A single, randomly generated encryption key, created once when the vault is first set up.
+The DEK is what actually encrypts and decrypts the vault's contents (identities, emails, phone numbers, addresses, documents, request history, templates, rules, company preferences).
+The DEK itself is never stored in plaintext anywhere, and it is never derived from the user's password. It exists only in memory while the vault is unlocked.
+
+\subsection{Layer 2 — Key Slots}
+The DEK is never used directly by a human-facing credential. Instead, each credential that should be able to unlock the vault gets its own key slot:
+A key slot stores an encrypted copy of the DEK, wrapped (encrypted) using a key derived from that specific credential.
+"Wrapping" here means encrypting the DEK itself as a small piece of data, using standard key-wrapping practice (e.g., a KDF-derived key used with an authenticated encryption scheme). The wrapped DEK is small (a few dozen bytes) regardless of how large the vault is.
+A vault can have multiple key slots active at once, each independent of the others.
+
+\section{How unlocking works}
+Password Slot: When the user enters their password, it passes through secure key derivation, producing a key. That key attempts to unwrap the DEK stored in the password's key slot. If successful, the DEK is now available in memory, and the vault decrypts.
+Recovery Key Slot: The recovery key works identically, but through its own independent slot. The recovery key is not derived from the password, has no mathematical relationship to it, and does not need to be entered together with it. Either credential, used alone, fully unlocks the vault.
+
+\section{Why This Is Secure}
+Because password and recovery key each unlock their own independent slot, compromising one does not compromise or reveal the other. An attacker who steals the recovery key gains no information that helps them guess the password, and vice versa.
+The recovery key itself is generated using a cryptographically secure random number generator (CSPRNG), not a human-chosen phrase, meaning it carries full entropy and is not vulnerable to dictionary or pattern-based guessing the way passwords can be.
+The recovery key is displayed to the user exactly once, at the moment of vault creation (or regeneration — see below), and is never stored by the software in plaintext or in any recoverable form afterward. The user is responsible for storing it offline (e.g., printed on paper, written down, or kept in a physically separate secure location), consistent with the project's no-central-database and no-telemetry principles (Sections 2.1 and 3).
+
+\section{Recovery Key Regeneration}
+Because the DEK itself never changes when a key slot is added, removed, or replaced, the recovery key can be regenerated at any time without ever touching or re-encrypting the vault's actual contents. The process:
+The user must already be authenticated — either via their password or via a currently valid recovery key. A lost recovery key cannot be used to generate its own replacement; regeneration always requires proving access through a still-valid credential first.
+Once authenticated, the DEK is already available in memory (it was unwrapped during login).
+A new recovery key is generated fresh, using the same CSPRNG process as the original, with zero relationship to the previous key.
+The DEK is wrapped again using this new key, and stored in a new key slot.
+The old recovery key's slot is immediately and permanently destroyed. From that moment, the old recovery key is cryptographically useless — it wraps nothing, so even if it were later exposed, it grants no access.
+Because the DEK is unchanged throughout this process, regeneration is fast (a few dozen bytes rewritten) and does not scale with vault size, and it never touches the encrypted vault contents itself.
+
+\section{Why This Preserves the Security Guarantee}
+This design ensures that losing both the password and the (current) recovery key still results in fully unrecoverable data — there is no hidden master key or backdoor, and no third party, including the project itself, ever has access to the DEK or any key slot in plaintext. The recovery key is purely an additional, user-held, offline credential; it does not weaken the zero-knowledge nature of the vault.
+
+\section{Opt-Out}
+If a user declines to generate a recovery key at vault creation, the vault falls back to the original no-recovery behavior: a lost password means lost data, with no fallback of any kind. This remains available as an explicit opt-out for users who prioritize maximum security over convenience, and can be revisited later by generating a recovery key at any point after vault creation, following the same authenticated regeneration flow described above.
+
+\sentinelchapterend

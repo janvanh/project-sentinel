@@ -1,0 +1,28 @@
+\chapter{Core Application Framework}
+
+\section{GUI Navigation Pattern}
+\textbf{Decision}: A single main window with sidebar navigation between the application's main sections (Requests, Companies, Identity Profiles, Rules, Plugins, Logs, Settings, per Section 27).
+
+\textbf{Rationale}: A sidebar keeps every top-level section visible and reachable in one click regardless of which section is active, which suits an application with a moderate, fixed number of top-level sections that a user will move between frequently during a session. This matches Section 27's description of "one advanced interface" better than a top tab-bar, which tends to suit a smaller or more dynamic set of views.
+\section{Settings Application Behavior}
+\textbf{Decision}: Settings changes apply live/immediately wherever possible. A restart is required only where a setting genuinely cannot be changed at runtime (e.g. certain GUI framework-level or startup-time configuration).
+
+\textbf{Rationale}: Requiring a restart for every settings change would be a needless friction point for a desktop application used frequently throughout the day. Applying changes live keeps the experience closer to "as simple as possible" (Section 5), while the exception for genuinely restart-only settings is a practical necessity rather than a default policy.
+\section{Update Check Timing}
+\textbf{Decision}: The application checks for both software and company-database updates on every launch, prompting the user for approval before installing anything, exactly as described in Section 26.
+
+\textbf{Rationale}: This directly implements the behavior already specified in Section 26 rather than introducing a new policy. Checking only at launch (rather than also periodically in the background) keeps the update flow predictable and tied to a moment the user is already actively engaging with the application, avoiding an update prompt interrupting an in-progress task.
+\section{Backup Framework Scope}
+\textbf{Decision}: The backup framework captures a full copy of the vault, application settings, and queue state, encrypted together as a single backup file, consistent with Section 25.
+
+\textbf{Rationale}: Section 25 explicitly lists settings, vault, and history as backup contents. Capturing queue state alongside the vault ensures a restored backup returns the application to a fully consistent state, including in-flight or scheduled background operations, rather than a vault whose associated queue state has since diverged or been lost.
+\section{Backup Scheduling}
+\textbf{Decision}: Backups can be triggered manually by the user at any time, with an optional scheduled automatic backup the user may enable.
+
+\textbf{Rationale}: Manual backup alone places the entire responsibility for remembering to back up on the user, which risks data loss for a user who simply forgets. An optional automatic schedule addresses this without removing user control. Automatic backup remains opt-in, consistent with the project's user-controlled-automation philosophy (Section 2.2), rather than a background behavior imposed by default.
+\section{Internal Event Notification}
+\textbf{Decision}: Background events (e.g. a request's status changing, a new email reply being detected) are propagated to the GUI using Qt's native signal/slot mechanism, bridged from the asyncio event loop via qasync, rather than a separately built custom event bus.
+
+\textbf{Rationale}: PySide6 was already fixed as the GUI framework (Section 2.2), and Qt's signal/slot system is a mature, thread-safe publish/subscribe mechanism specifically designed to safely cross the exact boundary this application has: asyncio background tasks (Section 2.5) notifying the Qt GUI thread. Building a separate custom event bus would duplicate a problem Qt already solves correctly, for no real gain given the GUI framework is already fixed. Calling GUI methods directly from background code was ruled out, since Qt widgets are not safe to touch off the main thread and this would readily introduce thread-safety bugs.
+
+\sentinelchapterend

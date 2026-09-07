@@ -1,0 +1,23 @@
+\chapter{Requirements Specification and Governance Foundation}
+
+This chapter documents the two deliverables of Phase 1 that are not the Requirements Specification itself: the Contribution Guidelines and the Initial Governance Model, along with a clarification of this Technical Specification's own status relative to the freeze Phase 1 applies to the base specification.
+
+\section{Requirements Specification Status}
+
+\textbf{Decision}: The Project Requirements Specification (Spec v0.2) is treated as frozen for the purposes of Phase 1, per Section 32's instruction that the specification be finalized before architectural work begins. This Technical Specification, by contrast, remains a living document throughout development, as already stated in its own Purpose section (Section 0), and is not subject to the same freeze.
+
+\textbf{Rationale}: Section 32 requires the Requirements Specification to be reviewed, refined, and frozen before architectural work begins, so that every subsequent phase is building against a stable, unambiguous definition of the project. That requirement is specific to the Requirements Specification itself, the document defining what the project is and why. This Technical Specification instead documents how those requirements are implemented, and its own stated purpose (Section 0) is to be updated as each phase is worked through and revised where later phases reveal a need to reconsider earlier decisions. Applying the same freeze to this document would contradict its own declared purpose, and would work against the practical value of treating it as a living record. For instance, the consistency review that corrected citation ambiguity and content gaps across Phases 3, 5, 6, and 7 was only possible because this document is not frozen.
+
+\section{Contribution Guidelines}
+
+\textbf{Decision}: A CONTRIBUTING.md file is maintained in the repository, covering the code style and tooling expectations already established (Sections 4.4 to 4.8: Ruff, mypy, pre-commit hooks), the pull request process and checklist (Section 4.10), and separate guidance for proposing company-database corrections (Section 14) and plugin submissions (Sections 12.1 to 12.4), since these follow different review paths than application code changes.
+
+\textbf{Rationale}: Consolidating contribution guidance into one document gives a new contributor a single starting point, while still directing them to the correct process for the specific kind of contribution they're making. A code change, a company-database correction, and a plugin submission are reviewed differently (Sections 14, 12.1), and conflating them into one generic guide would leave a contributor unsure which rules actually apply to their submission.
+
+\section{Initial Governance Model}
+
+\textbf{Decision}: For v1.0, a single maintainer holds final decision authority over the project, including architectural decisions, release approval, and moderator/plugin-registry trust decisions (Sections 3.9, 12.1). A path toward a broader maintainer team is acknowledged as a future direction but is not scoped or formalized as part of v1.0.
+
+\textbf{Rationale}: A single-maintainer model matches the project's actual current scale and avoids introducing formal governance overhead, such as voting procedures or maintainer onboarding criteria, before there is a team to apply it to. This is consistent with the project's own community-governance design elsewhere: Section 14's reputation-weighted voting and moderator threshold, and Section 12.1's trusted-author key registry, both describe processes for community contributions, not decisions about the project's core direction. Those remain the maintainer's responsibility until a broader governance model is deliberately established. Leaving that expansion path acknowledged but unscoped keeps this section honest about the project's current state rather than describing a governance structure that doesn't yet exist.
+
+\sentinelchapterend

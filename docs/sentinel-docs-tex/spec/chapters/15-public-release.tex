@@ -1,0 +1,32 @@
+\chapter{Public Release}
+
+\section{Versioning Scheme}
+\textbf{Decision}: The project uses Semantic Versioning (MAJOR.MINOR.PATCH), with the public release starting at 1.0.0.
+
+\textbf{Rationale}: Semantic Versioning gives users and contributors an immediately meaningful signal about the nature of a given update, a MAJOR bump signals breaking changes, MINOR signals new functionality, PATCH signals fixes, which matters for a security-sensitive desktop application where users need to judge how significant an update is before approving it (Section 26). Calendar versioning would convey release timing but not the nature or risk of a given change, which is the more relevant signal for this project's update-approval flow.
+\section{Release Binary Distribution}
+\textbf{Decision}: Signed Windows and macOS installers/bundles are published as attachments on tagged GitHub Releases, serving as the canonical download source, linked from the documentation site (Section 13.3). The Linux build continues to be distributed via Flathub, as already established in Section 2.7.
+
+\textbf{Rationale}: Publishing through GitHub Releases keeps release distribution on the same platform already used for the repository, CI, and issue tracking (Sections 4.3, 4.7), avoiding the need to build and secure a separate release-hosting website. Tying releases directly to git tags also keeps the signed-release pipeline (Section 2.8) anchored to a single, auditable point of truth, consistent with the git-flow branching model already established (Section 4.2), where main only advances via tagged releases.
+\section{Post-Release Roadmap Publication}
+\textbf{Decision}: The public post-v1.0 roadmap is maintained in two complementary forms: a living ROADMAP.md file in the repository for high-level direction and priorities, and GitHub Issues/Milestones for granular, trackable feature and fix planning.
+
+\textbf{Rationale}: A ROADMAP.md gives prospective users and contributors a quick, readable sense of where the project is heading without needing to parse dozens of individual issues, while GitHub Milestones give contributors a concrete, actionable view of what is planned for a specific upcoming release. Using both keeps high-level direction and granular tracking each in the format best suited to it, rather than forcing one document to serve both purposes.
+\section{Timing of External Community Contributions}
+This item remains an open decision rather than a settled one. Three plausible approaches, evaluated against the project's philosophy, are recorded here for future decision:
+\begin{itemize}
+	\item Open immediately at v1.0 launch; maximizes early community involvement 	and aligns most directly with the community-maintenance priority (Section 2.3), but means the project's review capacity (Section 4.10) is tested by external contributions before the codebase and processes have had time to stabilize post-launch.
+	
+	\item Closer maintainer scrutiny before v1.0, formalizing into the standard PR 	process afterward. Gives the maintainer(s) more control while the security foundation and core architecture are still settling, reducing the risk of reviewing external changes against a moving target, but delays the\\community-maintenance benefits the project is explicitly built around.
+	
+	\item A hybrid: accept issue reports and discussion pre-v1.0, but hold external code contributions (PRs) until after v1.0; balances early community engagement (bug reports, company-database corrections, which are lower-risk than code changes) against keeping code review load 	manageable while the codebase is least stable.
+This should be revisited and finalized as v1.0 approaches and actual maintainer review capacity becomes clearer.
+\end{itemize}	
+
+\section{License Publication}
+\textbf{Decision}: The exact PolyForm Noncommercial 1.0.0 license text is published as a LICENSE file at v1.0 launch. Section 30's licensing rationale, explaining why a source-available, non-commercial license was chosen over an OSI-approved open-source license, is republished as a standalone companion document (e.g. LICENSING.md), linked from the README, rather than left only inside this specification.
+
+\textbf{Rationale}: Section 30 already commits to the rationale being "made publicly visible so the distinction is never misrepresented to users or contributors." Publishing the rationale as its own README-linked document at launch, rather than leaving it findable only within this internal specification, is what actually fulfills that commitment for a user or contributor encountering the project for the first time, they are unlikely to read this technical specification, but are likely to check a linked \mbox{LICENSING.md} if the license terms raise a question.
+
+
+\sentinelchapterend

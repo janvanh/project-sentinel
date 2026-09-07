@@ -1,0 +1,42 @@
+\chapter{System Architecture}
+
+\section{Core Technology Stack}
+\textbf{Decision}:  Python is the core application language for all business logic, including the vault, encryption, request engine, queue, company database, and plugin host.
+
+\textbf{Rationale}:  Python allows the entire non-GUI application — the parts most relevant to security review and community contribution — to remain a single, accessible language, lowering the barrier for community code review and contribution (Sections 14 and 28).
+\section{GUI Framework}
+\textbf{Decision}:  PySide6 (Qt for Python).
+
+\textbf{Rationale}:  PySide6 keeps the entire application in one language and process model, with no bundled browser engine to secure, update, or audit, a meaningful consideration for a security-focused tool. It is LGPL-licensed, compatible with the project's planned source-available, non-commercial licensing direction (Section 30), mature across all three initial target platforms (Section 4), and gives a native look and feel on each. This was chosen over a web UI in a Tauri/Electron shell (which would introduce a second language/toolchain and, in Electron's case, a bundled Chromium engine) and over Python-native webview frameworks such as Flet or NiceGUI (younger ecosystems, less proven at this application's scale).
+\section{Internal Component Communication}
+\textbf{Decision}:  The core application (GUI, vault, queue, request engine, company database) runs in-process as a single Python application. Plugins are the sole exception and run isolated in a sandboxed subprocess.
+
+\textbf{Rationale}:  Full inter-process communication between every core component would add complexity with no real security payoff. The GUI, vault, and queue are all trusted, first-party code reviewed under the same process (Section 28). The one place isolation genuinely matters is plugins, which are third-party, community-contributed code operating under a default-no-access permission model (Section 21). Isolating only that boundary satisfies Phase 5's sandboxing requirement without paying an IPC-complexity cost everywhere else.
+\section{Plugin Sandboxing Mechanism}
+\textbf{Decision}:  Plugins run as an isolated OS-level subprocess and interact with the core application only through a narrow, explicit capability API (e.g. discrete calls such as requesting network access or reading a specific identity profile). Stronger OS-level hardening (seccomp/AppArmor/Windows job objects) and/or a future move to WASM-based plugins are documented as a post-v1 hardening path, not a v1 requirement.
+
+\textbf{Rationale}:  A subprocess plus a deliberately small, permissioned API delivers the two things the specification's plugin model actually requires (Section 21): a hard process boundary so a misbehaving plugin cannot take down the vault or GUI, and an enforceable choke point where every capability is something the user explicitly granted. It keeps plugins written in plain Python, which matters for community contribution (Section 14). Full OS-level sandboxing profiles are more robust against a deliberately malicious plugin author, but require three separate, ongoing security profiles across Windows/Linux/macOS (Section 4), a maintenance cost not justified before the plugin ecosystem exists. WASM-based plugins would offer the strongest, most OS-agnostic isolation, but would force plugin authors into WASM-compilable languages, cutting against the ease of community contribution this phase otherwise optimizes for.
+\section{Concurrency Model}
+\textbf{Decision}:  asyncio as the backbone for the queue and all background/network tasks (email sending, IMAP polling, scheduled checks, database synchronization), with a worker thread pool for blocking or CPU-bound operations (key derivation, document redaction, plugin subprocess calls).
+
+\textbf{Rationale}:  The queue's workload (Section 18) is overwhelmingly I/O-bound, which asyncio handles with far less overhead than a thread-per-task model. Relevant given bulk actions across many companies at once (Section 12) may mean dozens of concurrent waiting operations on a user's own desktop hardware. asyncio also composes cleanly with an embedded SQLite-backed queue via aiosqlite. The thread pool exists because a small number of operations are deliberately CPU-heavy (Argon2id key derivation) or otherwise blocking, and must never be allowed to freeze the GUI. Plain threads for everything were ruled out as they scale poorly under many simultaneous waiting operations; a full external task-queue system (e.g. Celery/RQ) was ruled out as it requires a broker service, directly against the dependency-minimization reasoning that already led to choosing an embedded queue over PostgreSQL (Section 18).
+\section{Cryptography Library}
+\textbf{Decision}:  Python's cryptography package (pyca/cryptography) for AEAD encryption and digital signatures, and argon2-cffi for key derivation. No custom or hand-rolled cryptographic constructions anywhere in the application.
+
+\textbf{Rationale}:  Mapped onto the key-slot model in Section 6: Argon2id (argon2-cffi) derives the key that wraps the Data Encryption Key from a password or recovery key; the DEK itself is generated via Python's secrets module (CSPRNG); vault contents and wrapped DEKs are encrypted with an AEAD cipher (XChaCha20-Poly1305, preferred for its larger nonce space given the DEK is re-wrapped repeatedly during password changes and recovery-key regeneration. AES-256-GCM remains an acceptable alternative); and Ed25519 signs software updates, company-database sync packages, and backups (Sections 21, 25, 26). The cryptography package was chosen over PyNaCl primarily for ecosystem weight. It is the de facto Python standard, more likely already a transitive dependency via other libraries (e.g. TLS), avoiding two overlapping crypto dependencies. Argon2id was chosen over bcrypt/scrypt as the current OWASP-recommended default with the best resistance to GPU-parallel attacks.
+\section{Packaging and Distribution}
+\textbf{Decision}:  Nuitka compiles the application to native machine code for release builds, with PyInstaller retained as a documented per-platform fallback. Platform-specific distribution:
+
+\begin{itemize}
+	\item[] Windows: unsigned .exe/.msi installer built with Inno Setup
+	\item[] macOS: unsigned .dmg
+	\item[] Linux: Flatpak, distributed via Flathub
+\end{itemize}
+
+\textbf{Rationale}:  Nuitka's native compilation produces a smaller, harder-to-tamper-with artifact than an interpreter-plus-scripts bundle, and is easier to hash-verify build-to-build, supporting the reproducible-builds goal in Section 26. PyInstaller remains the fallback for any dependency that resists Nuitka compilation on a given platform. On distribution: no code-signing certificate (Windows Authenticode) or Apple Developer notarization is used at this stage, as both carry ongoing monetary cost; this means Windows SmartScreen and macOS Gatekeeper will show first-run warnings, which will be documented in user-facing install instructions. A free path to remove the Windows warning exists via SignPath.io's open-source signing program and should be revisited at Phase 15. Flatpak was chosen for Linux over separate .deb/.rpm packages (avoids maintaining multiple distro-specific build targets) and over AppImage (Flatpak gives a full native-feeling install, app-store listing, icon, clean uninstall, whereas AppImage requires the user to manually mark the file executable); Flatpak's sandboxing model also reinforces rather than conflicts with the project's security positioning (Section 31).
+\section{Update Delivery}
+\textbf{Decision}:  An in-app auto-updater is used for the Windows and macOS builds: the application checks a release manifest, downloads the new installer, and verifies its Ed25519 signature (reusing the signing infrastructure from Section 2.6) before applying it, consistent with the user-approval requirement in Section 26. The Linux/Flatpak build instead relies on Flatpak's native update mechanism via Flathub.
+
+\textbf{Rationale}:  Running a custom in-app updater alongside Flatpak's own update system would duplicate effort and fight the Flatpak sandbox, which is designed to manage its own application updates. Using each platform's most natural mechanism keeps the update experience simple for users on every platform while preserving the signed, user-approved update flow the specification requires.
+
+\sentinelchapterend

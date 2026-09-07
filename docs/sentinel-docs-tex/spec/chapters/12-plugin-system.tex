@@ -1,0 +1,29 @@
+\chapter{Plugin System}
+
+\section{Plugin Signing and Trust Model}
+\textbf{Decision}: Plugins are distributed as packages signed by their individual developer using their own Ed25519 key (consistent with Section 2.6's signing infrastructure). The project maintains and curates a registry of trusted author public keys, rather than re-signing every plugin release itself.
+
+\textbf{Rationale}: A developer-signed model with a project-maintained trust registry lets the project gate initial trust (adding an author's key to the registry) without becoming a mandatory bottleneck for every subsequent plugin release from an already-trusted author. This mirrors the governance pattern already established for the community company database (Section 14): a registry the project curates, but content the community produces and updates independently. A model where the project re-signs every plugin centrally would concentrate a large, ongoing review workload in one place and work against the community-maintenance and scalability goals already reflected elsewhere in the specification (Section 2.3).
+\section{Permission Granting}
+\textbf{Decision}: Each plugin ships with a manifest file declaring every capability it requests upfront. At install time, the user reviews and individually grants or denies each requested capability before the plugin can run.
+
+\textbf{Rationale}: Reviewing the full set of requested capabilities at install time gives the user a complete picture of what a plugin could do before it ever executes, rather than being asked piecemeal as the plugin runs. This is consistent with Section 21's default-no-access model and the capability-token enforcement mechanism already established in Phase 5 (Section 5.5): the manifest is effectively the human-reviewable declaration of exactly which capability tokens the plugin will be issued if approved.
+\section{Plugin Management Interface}
+\textbf{Decision}: A dedicated Plugins section in the GUI (Section 27) lists all installed plugins along with their granted permissions, version, and enable/disable/uninstall controls.
+
+\textbf{Rationale}: A dedicated management view keeps a plugin's granted permissions visible and reviewable at any time after installation, not just at the moment of granting, letting a user audit or revoke access later without needing to reinstall or dig through a configuration file. This also gives the flagging/suspension mechanism (Section 12.5) a natural place to surface a plugin's suspended status to the user.
+\section{Plugin Discovery and Installation}
+\textbf{Decision}: Plugins are primarily discovered and installed through a curated, in-app plugin directory. Manual installation from a local file is available as a secondary, advanced option, subject to the same signature and trusted-key verification as directory installs.
+
+\textbf{Rationale}: A curated in-app directory gives most users a safe, browsable default path that only surfaces plugins signed by a registry-trusted author (Section 12.1), keeping the common case simple and consistent with "installation should be as simple as possible" (Section 5). Manual install-from-file remains available for advanced users or plugin developers testing their own work, but does not bypass signature verification.
+\section{Revocation of Compromised Plugins or Author Keys}
+\textbf{Decision}: A live, already-installed plugin can be flagged as suspicious by any user, mirroring the post-approval flagging model already defined for the company database (Section 14). Plugins or author keys that accumulate enough flags are automatically suspended pending moderator review, regardless of their prior trusted status.
+
+\textbf{Rationale}: This directly reuses a governance pattern the specification has already justified for a structurally similar problem: Section 14 notes that a record legitimate at approval time but later compromised needs to be caught and pulled from circulation quickly, regardless of prior approval. That reasoning applies at least as strongly to a plugin, since a compromised plugin is actively executing code with granted permissions on users' machines. Relying solely on the project to notice and revoke centrally would introduce a slower response time than a security-focused application (Section 31) should accept for actively running permissioned third-party code.
+\section{Sandbox Resource Limits}
+\textbf{Decision}: The sandboxed plugin subprocess (Section 2.4) enforces CPU, memory, and execution-time limits, in addition to its existing capability-token permission restrictions (Section 5.5). A plugin that exceeds these limits or hangs past its timeout is automatically terminated.
+
+\textbf{Rationale}: Capability tokens restrict what a plugin can access, but do not by themselves prevent a plugin from misbehaving in ways that don't require any granted capability at all, for example an infinite loop, a memory leak, or a hung network call can degrade or freeze the host application regardless of what permissions were granted. Enforcing resource limits at the subprocess boundary protects the core application's stability and responsiveness from a broader class of plugin failures than permission enforcement alone addresses, whether the cause is malicious or simply a bug in an otherwise well-intentioned plugin.
+
+
+\sentinelchapterend

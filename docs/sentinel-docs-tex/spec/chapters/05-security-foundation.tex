@@ -1,0 +1,53 @@
+\chapter{Security Foundation}
+
+\section{Application Configuration Storage}
+\textbf{Decision}: Non-personal application configuration (window state, sync settings, UI preferences) is stored in a plain, unencrypted TOML file.
+
+\textbf{Rationale}: This follows the same reasoning already applied to the task queue and company database (Sections 3.2, 3.5): none of this data is personal or sensitive, so encrypting it would add overhead without a corresponding security benefit, and TOML keeps the format simple and human-readable for the user's own configuration.
+\section{Password Strength Validation}
+\textbf{Decision}: Password strength is validated using zxcvbn.
+
+\textbf{Rationale}: Section 6 requires rejecting not just short passwords but common words, predictable substitutions, and simple leetspeak modifications. Simple rule-based checks (length, character-class counts) cannot catch these patterns. A password like "P@ssw0rd123!" satisfies every rule-based check while being trivially guessable. zxcvbn models realistic attacker guessing strategies (dictionaries, keyboard patterns, common substitutions) and gives a genuine strength estimate rather than a superficial rule pass.
+\section{Vault Auto-Lock}
+\textbf{Decision}: The vault automatically locks after a configurable idle timeout. Auto-lock is blocked entirely while any background task requiring vault access is active (e.g. a request mid-send), resuming its idle countdown once no such task is running.
+
+\textbf{Rationale}: An idle timeout reduces the window an unlocked vault is exposed on a machine the user has stepped away from, directly supporting the encrypted-vault threat model (Section 29). Blocking auto-lock during active vault-dependent background work avoids corrupting or interrupting an in-progress operation (such as a partially-sent request, Section 11) purely because of a timer, which would be a worse outcome than a slightly longer unlock window in that specific case.
+\section{Secure Logging}
+\textbf{Decision}: Structured logging via structlog, writing to a local rotating log file. The default log stream contains no personal information, matching the format described in Section 23. The optional personal-log stream (containing PII such as emails, company names) is implemented as a separately-gated stream that must be explicitly enabled by the user.
+
+\textbf{Rationale}: Structured logging makes it straightforward to enforce, in code, exactly which fields are permitted in the default log stream, rather than relying on developers manually avoiding PII string interpolation in every log call. A separately-gated stream for the personal log (Section 23) keeps the opt-in nature of PII logging structurally enforced rather than just documented.
+\section{Plugin Permission Enforcement}
+\textbf{Decision}: The plugin permission framework is implemented as a capability-token model: a plugin subprocess only ever receives function references (RPC stubs) for the specific data and actions the user has granted. Capabilities the user has not granted are not merely denied when called. The corresponding function reference does not exist within the plugin's scope at all.
+
+\textbf{Rationale}: This builds directly on the subprocess-isolation decision from Phase 2 (Section 2.4): since plugins already communicate with the core application over a narrow API boundary, that boundary is the natural enforcement point. A capability-token model is a structural guarantee. There is no code path to accidentally miss a permission check on a new function, because an ungranted capability simply has no corresponding function available to call. This was chosen over a permission-check decorator/gate model, where every sensitive call path must have the correct check applied and kept correct as the codebase grows; a single missed decorator on one new function would constitute a silent permission bypass. The tradeoff is more up-front API design work, since every plugin capability must be modeled as its own narrowly-scoped function rather than a single generic gated call. An acceptable cost for the stronger guarantee, consistent with Section 21's "default: no access" requirement.
+\section{Argon2id Parameter Calibration}
+\textbf{Decision}: Argon2id parameters (memory and iteration cost) are benchmarked and calibrated on the user's own hardware at vault creation, targeting an unlock time of approximately 0.5–1 second, with a safety floor below which parameters will not be reduced regardless of benchmark results.
+
+\textbf{Rationale}: A single fixed OWASP-baseline parameter set is a compromise value tuned for average hardware: it under-uses available security margin on fast modern desktops (giving an attacker with a stolen vault file an easier time than necessary) while potentially being uncomfortably slow, or a source of pressure to lower parameters project-wide, on older or lower-end hardware. Calibrating per-installation, a brief one-time benchmark during vault creation, the same approach used by comparable tools such as KeePass and Bitwarden, gets each user closer to their own actual security/usability optimum. The safety floor exists to prevent the calibration from drifting below a safe minimum on unusually fast or misreported hardware.
+\section{Memory Protection for Key Material}
+\textbf{Decision}: The Data Encryption Key and any keys derived from the password or recovery key are protected in memory using OS-level memory-locking APIs (mlock on Linux/macOS, VirtualLock on Windows) to prevent them from being written to disk via swap or pagefile, and are explicitly zeroed when the vault locks or the application closes.
+
+\textbf{Rationale}: The problem this addresses: while the vault is unlocked, the DEK and derived keys exist as plaintext in the application's memory (Section 6). Under normal OS memory management, if the system comes under memory pressure, any page of memory, including the page holding these keys, can be written out to swap space or a pagefile on disk. If that happens, plaintext key material could persist on disk well after the vault is locked or the application is closed, and would not be affected by locking the vault, since the vault's own encryption is irrelevant once the key itself has leaked onto unencrypted disk. This directly undermines the "stolen encrypted vault" and device-compromise threat categories the specification already names (Section 29): if an attacker later obtains the disk (including swap), they could obtain the key that was believed to only exist in memory.
+Pros of implementing OS-level memory locking and explicit zeroing:
+
+\begin{itemize}
+	\item Prevents the DEK and derived keys from ever being written to disk via swap/pagefile while the vault is unlocked.
+	\item Explicit 	zeroing on lock or shutdown shrinks the window during which key material remains in memory at all.
+	\item Directly 	closes a gap against threat categories the specification already 	commits to defending against (Section 29).
+	\item Consistent with the project's positioning as a serious security application (Section 31), where this class of protection is a reasonable 	baseline expectation.
+\end{itemize}
+Cons and limitations of this approach:
+\begin{itemize}
+	\item Requires platform-specific code (separate implementations for mlock and VirtualLock), adding a small, bounded maintenance surface rather than a one-line change.
+	\item Python's memory model, including reference counting and garbage collection, makes it difficult to guarantee that no copy of a key ever exists 	outside the explicitly-tracked and zeroed memory region. For example, an intermediate value produced during a cryptographic operation could briefly exist in memory the application does not directly control.
+	\item As a result, this measure substantially reduces exposure but cannot provide an absolute guarantee against key material touching disk, in the way it could in a language with fully manual memory management.
+\end{itemize}
+
+\emph{This is an active area of practical cryptographic engineering, and the specific technique used here (OS-level locking plus explicit zeroing) reflects current best-effort practice within a garbage-collected language, not a solved problem with a perfect guarantee. This decision should be treated as revisitable: it may change as better techniques become available, as the project's understanding of CPython's memory behavior deepens, or as ongoing research into secure memory handling in managed-memory languages evolves.}
+\section{Failed Unlock Attempt Rate Limiting}
+\textbf{Decision}: Repeated failed vault-unlock attempts trigger exponential backoff, temporarily locking out further attempts for increasing periods.
+
+\textbf{Rationale}: Argon2id's computational cost already slows brute-force attempts against a stolen vault file, but that cost applies equally to an offline attacker with unlimited compute time and to a legitimate user typing a password directly into the running application. Rate-limiting attempts at the application layer adds a second, independent layer of protection specifically against an attacker attempting to guess the password through the running application itself, rather than against the vault file offline.
+
+
+\sentinelchapterend

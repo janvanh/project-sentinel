@@ -1,0 +1,26 @@
+%% ============================================================
+%%  chapter-template.tex
+%%  Copy this into bible/chapters/ or spec/chapters/ as a starting
+%%  point for a new chapter, then rename it and add its \include
+%%  line to that document's main.tex.
+%% ============================================================
+
+\chapter{Chapter Title Here}
+
+Default logs contain no personal information.
+\begin{itemize}
+	\item[] Allowed:
+	\begin{itemize}
+		\item[] \textbf{"Request AZ-7492 submitted on 2026-05-23 at 1724Z."}
+	\end{itemize}
+	\item[] Not allowed:
+	\begin{itemize}
+		\item[] \textbf{"Request submitted for user@email.com."}
+	\end{itemize}
+
+\end{itemize}
+
+Users may enable separate personal logs for their own review. These logs would include PID and PII such as emails, companies, and names.
+
+
+\sentinelchapterend

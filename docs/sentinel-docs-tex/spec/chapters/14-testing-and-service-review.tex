@@ -1,0 +1,36 @@
+\chapter{Testing and Service Review}
+
+\section{Test Coverage Policy}
+\textbf{Decision}: Test coverage is tracked and reported in CI (via pytest-cov) but is not enforced as a hard, merge-blocking threshold.
+
+\textbf{Rationale}: Coverage percentage is a weak proxy for test quality — it is straightforward to reach a high number with shallow tests that execute code without meaningfully asserting on security-relevant behavior (for example, a test that unlocks the vault but never verifies a wrong password is correctly rejected). A hard threshold can perversely incentivize low-value tests written just to satisfy the number. Given this project's highest-stakes code is exactly where coverage-as-a-number is least meaningful (vault, cryptography, permission enforcement — Sections 5.5–5.7), tracked-but-unenforced coverage keeps the signal visible to reviewers while relying on actual reviewer judgment for security-sensitive PRs, rather than a mechanical pass/fail rule.
+\section{End-to-End and GUI Testing}
+\textbf{Decision}: Automated end-to-end and GUI testing is implemented using pytest-qt, testing PySide6 widgets and user flows directly within the existing pytest-based test suite (Section 4.6).
+
+\textbf{Rationale}: pytest-qt integrates directly with the testing framework already chosen (Section 4.6), avoiding a second, separate testing tool or framework for GUI flows specifically. Automated GUI testing catches regressions in critical user-facing flows (e.g. vault unlock, request approval) that unit tests on underlying logic alone would not exercise.
+\section{Vulnerability Disclosure Process}
+\textbf{Decision}: The project publishes a formal vulnerability disclosure policy (SECURITY.md) describing how to report a vulnerability, a committed response-time expectation, and a credit policy for reporters. No paid bug bounty program is offered for v1.0.
+
+\textbf{Rationale}: A clear, published disclosure policy is a low-cost, high-value trust signal consistent with the project's positioning as a serious security application (Section 31) and its stated encouragement of vulnerability reports and security testing (Section 28). A paid bug bounty is a meaningful ongoing financial commitment that is not necessary to establish a functioning, credible disclosure process, and can be reconsidered later if the project's resources and user base grow.
+\section{Automated Static Security Analysis}
+\textbf{Decision}: No automated static security analysis tool (e.g. Bandit, Semgrep) is run in CI for v1.0. Security review relies on manual code review, consistent with the review practices already established in Phase 4.
+
+\textbf{Rationale}: This keeps the v1.0 CI pipeline (Section 4.7) focused on the tooling already established (Ruff, mypy, pytest, dependency scanning) without adding an additional automated gate before the project has evaluated whether the signal-to-noise ratio of static security analysis tooling is worthwhile for its specific codebase. This is a reasonable v1.0 scope decision rather than a permanent one, and should be revisited as the codebase and contributor base grow.
+\section{Fuzz Testing}
+\textbf{Decision}: For v1.0, property-based/fuzz testing (via Hypothesis) targets the global company-record YAML importer (Section 3.3) specifically. Fuzz testing of email/DSN response parsing (Section 10.6) and the request template engine (Section 9.1) is identified as a planned expansion for a later version, not included in v1.0 scope.
+
+\textbf{Rationale}: The YAML company-record importer is the highest-priority fuzzing target for v1.0 because it processes community-submitted data (Section 14) that, while subject to review and verification (Section 3.4), is still less trusted than the application's own first-party code, malformed or adversarially crafted YAML is a plausible real input this parser must handle safely. Email/DSN parsing and the template engine also process externally influenced input and are reasonable future fuzzing targets, but are deferred to keep v1.0's testing scope focused on the highest-risk parser first; this deferral is stated explicitly here rather than left implicit, consistent with the project's transparency principle (Section 31).
+\section{Performance Testing}
+\textbf{Decision}: No dedicated performance testing (automated or manual benchmarking) is conducted for v1.0.
+
+\textbf{Rationale}: Consistent with the project's overall priority order (Section 2.3, where speed ranks last), formal performance testing is not treated as a v1.0 requirement. Functional correctness and security testing (Sections 14.1–14.5) take priority within this phase's scope.
+\section{Pre-Release Community Review Window}
+\textbf{Decision}: There is no formal, separately time-boxed community security review period held specifically before the v1.0 tag. Community review is continuous and ongoing throughout development, via the standard pull request review process and issue reporting already established (Sections 4.2, 4.10).
+
+\textbf{Rationale}: Since every change already goes through pull request review before merging to develop, and community members can report issues at any time via the established issue templates (Section 4.10), a review process is already continuously active rather than concentrated into a single pre-release window. Introducing a separate formal window would add process overhead without a clear corresponding gain, given review is not being deferred to that window in the first place.
+\section{Release Candidate Promotion Criteria}
+\textbf{Decision}: A release candidate is promoted to the public v1.0 release only once all known issues, of any severity, have been resolved.
+
+\textbf{Rationale}: This reflects the project's stated guiding principle (Section 32) that correctness, security, and privacy take precedence over rapid feature delivery or release speed at every stage of development. Requiring all known issues, not only critical or high-severity ones, to be resolved before the first public release sets a deliberately high bar for the version most new users will judge the project's trustworthiness by.
+
+\sentinelchapterend

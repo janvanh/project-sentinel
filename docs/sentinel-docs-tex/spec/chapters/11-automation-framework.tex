@@ -1,0 +1,34 @@
+\chapter{Automation Framework}
+
+\section{Browser Automation Engine}
+\textbf{Decision}: Playwright powers browser automation (Section 17).
+
+\textbf{Rationale}: Playwright is actively developed, supports multiple browser engines, and handles modern, JavaScript-heavy sites more reliably than older tooling, relevant given company privacy-request pages vary widely in how they are built. This gives the automation framework a solid technical foundation for both full and assisted automation (Section 17).
+\section{Automation Visibility}
+\textbf{Decision}: Browser automation runs in a visible, app-controlled browser window that the user can watch and intervene in at any point, rather than running headlessly in the background.
+
+\textbf{Rationale}: A visible window lets the user directly observe what an automated action is doing on their behalf at any time, which reinforces the project's transparency principle (Section 31) beyond just being a technical necessity for assisted and manual steps (Section 17). It also gives the user a natural, immediate point of intervention if something looks wrong, consistent with the user-controlled-automation philosophy (Section 2.2).
+\section{CAPTCHA Detection}
+\textbf{Decision}: CAPTCHA detection uses heuristic recognition of known CAPTCHA provider DOM elements and scripts (e.g. reCAPTCHA, hCaptcha). When detected, automation automatically pauses and hands control to the user.
+
+\textbf{Rationale}: Section 17 explicitly requires that the system must never bypass CAPTCHA. Heuristic detection of known provider markup allows the automation framework to proactively recognize a CAPTCHA and hand off to the user before any bypass attempt could even be considered, rather than relying on the user to notice a stalled or failed automation and intervene after the fact.
+\section{Company-Specific Automation Structure}
+\textbf{Decision}: Company-specific browser automation (the "specialized company automation" plugins described in Section 21) is defined declaratively as a sequence of selectors and actions, stored either in the company record or in a plugin, and interpreted by a single shared Playwright driver rather than each company automation being its own arbitrary code driving Playwright directly.
+
+\textbf{Rationale}: A declarative action sequence is far easier for community moderators to review for safety and correctness than arbitrary executable code (Section 14, 28), since its full behavior is enumerable from its declared steps rather than requiring a full code audit. It also keeps every company automation running through the same shared driver, so improvements to CAPTCHA detection, rate limiting (Section 11.6), and error handling apply uniformly across all company automations rather than needing to be reimplemented per plugin.
+\section{Automation Status Reporting}
+\textbf{Decision}: Automation status (e.g. running, paused, waiting for user, CAPTCHA-blocked, failed) is reported through the same event bus and queue status model already used for request status and background tasks generally (Sections 6.6, 11), with additional automation-specific states added to that existing model.
+
+\textbf{Rationale}: Automation is, functionally, another kind of background task the queue already tracks (Section 18), and reusing the existing Qt signal/slot-based event bus (Section 6.6) means the user has a single, consistent place to see everything happening in the background, for example email sending, database sync, and automation alike, rather than a separate, parallel status system to build, maintain, and for the user to learn.
+\section{Automation Rate Limiting}
+\textbf{Decision}: The automation framework enforces per-domain rate limiting and politeness delays between automated actions, configurable by the user and defaulting to conservative values.
+
+\textbf{Rationale}: Section 17 requires that automation respect a target site's Terms of Service and robots.txt directives and never resemble unauthorized scraping. Built-in, conservative-by-default rate limiting makes this a structural property of the automation framework itself rather than something each company-specific automation sequence must independently remember to implement correctly, reducing the risk of an automation inadvertently behaving in a way that could be mistaken for abusive traffic.
+\section{Manual Assistance Mode}
+\textbf{Decision}: Manual assistance (Section 17) uses the same Playwright-controlled browser window used for full and assisted automation. For manual steps, the application simply steps back and lets the user drive the browser directly, 
+rather than opening a separate plain, non-automated browser.
+
+\textbf{Rationale}: Using one browser context across all three automation approaches (full, assisted, manual) keeps the user's session, cookies, and page state continuous across a single privacy request even if it moves between automated and manual steps, for example an automated form-fill followed by a manual CAPTCHA solve followed by an automated submission. A separate plain browser would break that continuity and could require the user to re-authenticate or re-navigate unnecessarily.
+
+
+\sentinelchapterend

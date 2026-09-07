@@ -1,0 +1,24 @@
+\chapter{Identity and Privacy Manager}
+
+\section{Privacy Rule Engine}
+\textbf{Decision}: The privacy rule engine (Section 8) represents user rules as structured, user-defined condition/action rules, evaluated by the engine. No free-form scripting or expression language is exposed to users.
+
+\textbf{Rationale}: Structured rules keep every possible rule mechanically inspectable and safe to evaluate — the engine can enumerate exactly what a rule can check and what action it can trigger, which matters given rules govern sensitive behavior such as document uploads and information sharing (Section 8). A free-form scripting approach would be more flexible but introduces both a larger security surface (arbitrary user-authored logic running against sensitive data) and a much higher bar for a non-technical user to safely author or audit a rule, which conflicts with the strict-by-default posture Section 8 already establishes.
+\section{Privacy Score Calculation}
+\textbf{Decision}: The privacy score (Section 19) is calculated using a weighted scoring model: each data category and condition present in a given request (e.g. email, phone number, government ID requirement, manual-approval requirement) contributes a defined sensitivity weight, and the request's overall score is derived from the combination of weights actually present in that specific request.
+
+\textbf{Rationale}: Section 19's own examples show the score varying based on exactly which fields a request shares, not on a generic request type — a weighted model is the only approach that can produce those example outputs ("Email only" vs. "Government ID required" plus "Manual approval required") from first principles. A fixed lookup table keyed by request type would either need a row for every possible field combination, which is impractical, or would collapse meaningfully different requests into the same score, undermining the purpose of the score.
+\section{Data Minimization Engine}
+\textbf{Decision}: The data minimization engine (Section 7) computes the minimum field set to include in a request as the intersection of the fields a company record declares as required (Section 13) and the fields the user's selected identity profile and active rules permit to be shared. Any field outside that intersection is never included in the outgoing request.
+
+\textbf{Rationale}: This directly implements the data minimization principle already established in Section 3 ("the system must always send the minimum amount of information required") as a concrete, mechanical computation rather than a general guideline. The engine has no path to including a field unless it is both actually required by the company and explicitly permitted by the user's own profile/rules. This also keeps final authority with the user, consistent with the user-controlled-automation philosophy (Section 2.2): the rules side of the intersection is entirely user-defined.
+\section{Document Metadata Removal}
+\textbf{Decision}: Metadata removal (Section 20) is powered by ExifTool, bundled directly within the application as platform-specific binaries under an internal resources path (e.g. resources/exiftool/<platform>/) and invoked via subprocess, rather than relying on a system-installed or PATH-resolved copy.
+
+\textbf{Rationale}: Bundling a known-good ExifTool binary per platform guarantees consistent, predictable metadata-stripping behavior regardless of what the user has or has not installed on their system, and avoids metadata removal silently failing or behaving inconsistently due to a missing or differently-versioned system installation. Resolving the binary from an internal resources path, keyed by platform, keeps this reliable across Windows, Linux, and macOS (Section 4) without depending on the user's PATH configuration.
+\section{Redaction, Cropping, and Watermarking}
+\textbf{Decision}: PyMuPDF (fitz) powers redaction and cropping of PDF documents; Pillow powers redaction, cropping, and watermarking of image files. These are used in addition to, not in place of, the bundled ExifTool metadata-removal step (Section 7.4).
+
+\textbf{Rationale}: PDF and image redaction/cropping/watermarking are meaningfully different problems from metadata stripping. They require manipulating visual content and page/pixel structure rather than reading or clearing metadata fields and ExifTool is not designed for this kind of content editing. PyMuPDF is a mature, well-supported library for PDF-specific manipulation (including true redaction that removes underlying content, not just visual overlay), and Pillow is the standard, broadly-supported choice for image manipulation in Python, keeping this step within the existing Python-first stack (Section 2.1) rather than introducing another bundled external binary.
+
+\sentinelchapterend

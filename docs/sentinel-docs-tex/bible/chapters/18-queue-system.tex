@@ -1,0 +1,28 @@
+%% ============================================================
+%%  chapter-template.tex
+%%  Copy this into bible/chapters/ or spec/chapters/ as a starting
+%%  point for a new chapter, then rename it and add its \include
+%%  line to that document's main.tex.
+%% ============================================================
+
+\chapter{Queue System}
+
+Background Operations require task queue.
+
+The preferred initial solution is an embedded, SQLite-backed queue.
+
+This choice preserves the local-first and simple-installation principles established in Sections 2.1 and 5: no external database server needs to be installed, configured, or maintained by the user, and the queue lives inside the same local application footprint as the rest of the vault-adjacent data.
+
+Used for:
+\begin{itemize}
+	\item sending emails
+	\item scheduled checks
+	\item database synchronization
+	\item document processing
+	\item background tasks
+
+\end{itemize}
+This reduces dependencies and improves local security.
+
+
+\sentinelchapterend
