@@ -1,0 +1,37 @@
+[project]
+name = "sentinel"
+version = "0.0.1"
+description = "Privacy Automation Platform"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+
+[project.optional-dependencies]
+dev = [
+    "ruff",
+    "mypy",
+    "pytest",
+    "pytest-cov",
+    "pre-commit",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+# E, F = core pyflakes/pycodestyle errors
+# I = import sorting
+# UP = pyupgrade (modern syntax)
+# B = bugbear (common bug patterns)
+# SIM = simplify (readability)
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=src/sentinel --cov-report=term-missing"
